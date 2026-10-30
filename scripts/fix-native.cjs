@@ -1,0 +1,1 @@
+const fs=require('fs');let p='scripts/prepare-native.mjs',s=fs.readFileSync(p,'utf8');s=s.replace("if(!('serviceWorker' in navigator))return\");", "if(!('serviceWorker' in navigator))return;\");");fs.writeFileSync(p,s);
