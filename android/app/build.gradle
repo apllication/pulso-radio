@@ -7,7 +7,7 @@ android {
         applicationId "app.pulso.radio"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("PULSO_VERSION_CODE") ?: "18").toInteger()
+        versionCode = (System.getenv("PULSO_VERSION_CODE") ?: "18").toInteger()
         versionName "1.2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
