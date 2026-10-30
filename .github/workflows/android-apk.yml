@@ -1,14 +1,20 @@
-name: Gerar APK de teste
+name: Gerar e publicar APK
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: pulso-release
+  cancel-in-progress: false
 jobs:
   android:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      PULSO_RUN_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,23 +25,64 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Instalar dependencias
-        run: npm ci
-      - name: Preparar Android
-        run: npm run android:sync
-      - name: Preparar SDK Android
+      - run: npm ci
+      - run: npm run android:sync
+      - name: Preparar assinatura protegida
+        env:
+          PULSO_SIGNING_JSON: ${{ secrets.PULSO_SIGNING_JSON }}
+        run: |
+          python3 - <<'PY'
+          import os,json,base64
+          data=json.loads(os.environ['PULSO_SIGNING_JSON'])
+          print('::add-mask::'+data['password'])
+          target=os.path.join(os.environ['RUNNER_TEMP'],'pulso-release.jks')
+          with open(target,'wb') as f: f.write(base64.b64decode(data['keystore']))
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('PULSO_VERSION_CODE='+str(1000+int(os.environ['PULSO_RUN_NUMBER']))+'\n')
+              f.write('PULSO_STORE_FILE='+target+'\n')
+              f.write('PULSO_STORE_PASSWORD='+data['password']+'\n')
+          PY
+      - name: Configurar SDK
         run: |
           test -f "$ANDROID_HOME/platforms/android-36/android.jar"
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > android/local.properties
-      - name: Gerar APK
+      - name: Gerar APK assinado
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
-      - name: Disponibilizar download
-        uses: actions/upload-artifact@v7
+          ./gradlew --no-daemon assembleRelease
+      - name: Preparar pacote de atualização
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/release/app-release.apk release/Pulso.apk
+          python3 - <<'PY'
+          import os,json,hashlib,re
+          with open('android/app/build.gradle') as f: version=re.search(r'versionName\s+"([^"]+)"',f.read()).group(1)
+          tag='v'+version+'-build.'+os.environ['RUN_NUMBER']
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('PULSO_RELEASE_TAG='+tag+'\n')
+              f.write('PULSO_RELEASE_NAME='+version+'\n')
+          with open('release/Pulso.apk','rb') as f: sha=hashlib.file_digest(f,'sha256').hexdigest()
+          data={'versionCode':int(os.environ['PULSO_VERSION_CODE']),'versionName':version,'sha256':sha,'url':'https://github.com/apllication/pulso-radio/releases/download/'+tag+'/Pulso.apk'}
+          with open('release/update.json','w') as f: json.dump(data,f)
+          PY
+      - name: Publicar download no GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$PULSO_RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$PULSO_RELEASE_TAG" release/Pulso.apk release/update.json --clobber
+          else
+            gh release create "$PULSO_RELEASE_TAG" release/Pulso.apk release/update.json --title "Pulso $PULSO_RELEASE_NAME — build $GITHUB_RUN_NUMBER" --notes "APK assinado, mensagens no topo, flash opcional e verificação de atualizações." --latest
+          fi
+      - uses: actions/upload-artifact@v7
         with:
-          name: Pulso-APK-teste
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Pulso-APK-assinado
+          path: release/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+      - name: Remover assinatura temporária
+        if: always()
+        run: rm -f "$RUNNER_TEMP/pulso-release.jks"

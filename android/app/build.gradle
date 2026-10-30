@@ -7,8 +7,8 @@ android {
         applicationId "app.pulso.radio"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 17
-        versionName "1.1.1"
+        versionCode (System.getenv("PULSO_VERSION_CODE") ?: "18").toInteger()
+        versionName "1.2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,10 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs { pulsoRelease { if(System.getenv("PULSO_STORE_FILE")){storeFile file(System.getenv("PULSO_STORE_FILE"));storePassword System.getenv("PULSO_STORE_PASSWORD");keyAlias "pulso";keyPassword System.getenv("PULSO_STORE_PASSWORD")} } }
     buildTypes {
         release {
+            if(System.getenv("PULSO_STORE_FILE")) signingConfig signingConfigs.pulsoRelease
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
