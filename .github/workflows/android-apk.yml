@@ -75,7 +75,7 @@ jobs:
           if gh release view "$PULSO_RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$PULSO_RELEASE_TAG" release/Pulso.apk release/update.json --clobber
           else
-            gh release create "$PULSO_RELEASE_TAG" release/Pulso.apk release/update.json --title "Pulso $PULSO_RELEASE_NAME — build $GITHUB_RUN_NUMBER" --notes "APK assinado, mensagens no topo, flash opcional e verificação de atualizações." --latest
+            gh release create "$PULSO_RELEASE_TAG" release/Pulso.apk release/update.json --title "Pulso $PULSO_RELEASE_NAME — build $GITHUB_RUN_NUMBER" --notes "Convites de áudio e vídeo pelo servidor, permissões Android e proteção contra repetição de áudio." --latest
           fi
       - uses: actions/upload-artifact@v7
         with:
