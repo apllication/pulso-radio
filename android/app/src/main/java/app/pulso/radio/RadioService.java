@@ -16,7 +16,7 @@ import java.util.concurrent.*;
 public class RadioService extends Service {
   public static volatile boolean appVisible=false;
   public static volatile boolean running=false;
-  private static final String ORIGIN="https://pulso-radio-matheus.airycake256.chatgpt.site";
+  private static final String ORIGIN="https://pulso-radio-matheus.marcio-gyn.chatgpt.site";
   private static final int SERVICE_ID=101, ALERT_ID=102;
   private ScheduledExecutorService network;
   private ExecutorService player;

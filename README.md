@@ -1,6 +1,6 @@
 # Pulso Android
 
-Projeto Android do Pulso. O servidor de rádio permanece em https://pulso-radio-matheus.airycake256.chatgpt.site/.
+Projeto Android do Pulso. O servidor de rádio permanece em https://pulso-radio-matheus.marcio-gyn.chatgpt.site/.
 
 ## Instalar
 

@@ -17,7 +17,7 @@ Para distribuir uma versão definitiva, use Build → Generate Signed App Bundle
 ## O que está incluído
 
 - Interface local com rádio 3D, chamada por código, menu, chat e arquivos.
-- Servidor já configurado: https://pulso-radio-matheus.airycake256.chatgpt.site
+- Servidor já configurado: https://pulso-radio-matheus.marcio-gyn.chatgpt.site
 - Serviço Android `RadioService` para receber voz e mensagens em segundo plano.
 - Notificação permanente com opção de desligar o rádio.
 - Toque de chamada fornecido pelo usuário e reprodução nativa dos pacotes de voz.
